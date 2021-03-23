@@ -9,6 +9,10 @@ pygame-menu = "*"
 
 [dev-packages]
 black = "*"
+flake8 = "*"
 
 [requires]
 python_version = "3.9"
+
+[pipenv]
+allow_prereleases = true
