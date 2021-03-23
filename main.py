@@ -17,12 +17,14 @@ class Scene:
         raise NotImplementedError
 
 
+high_score = 0
+
+
 class GameScene(Scene):
     def __init__(self):
         self.gravity = 0.33
         self.bird_movement = 0
         self.score = 0
-        self.high_score = 0
         self.floor_x_pos = 0
         self.game_over = False
 
@@ -33,7 +35,10 @@ class GameScene(Scene):
 
         self.pipe_list = []
         self.pipe_height = [400, 600, 800]
+
         self.score_sound_countdown = 100
+        self.score_surface = None
+        self.score_rect = None
 
     def render(self):
         # Bird
@@ -48,6 +53,13 @@ class GameScene(Scene):
         # Floor
         self.draw_floor()
 
+        # Score
+        self.score_surface = game_font.render(
+            str(int(self.score)), True, (255, 255, 255)
+        )
+        self.score_rect = self.score_surface.get_rect(center=(288, 100))
+        screen.blit(self.score_surface, self.score_rect)
+
     def update(self):
         self.bird_movement += self.gravity
         self.rotated_bird = self.rotate_bird(self.bird_surface)
@@ -58,10 +70,17 @@ class GameScene(Scene):
         if self.floor_x_pos <= -576:
             self.floor_x_pos = 0
 
+        # Score
+        self.score += 0.01
+        self.score_sound_countdown -= 1
+        if self.score_sound_countdown <= 0:
+            score_sound.play()
+            self.score_sound_countdown = 100
+
         # Game Over state change
         self.game_over = self.check_collision(self.pipe_list)
         if self.game_over is True:
-            manager.go_to(TitleScreen())
+            manager.go_to(TitleScreen(int(self.score)))
 
     def check_collision(self, pipes):
         for pipe in pipes:
@@ -136,12 +155,34 @@ class GameScene(Scene):
 
 
 class TitleScreen(Scene):
-    def __init__(self):
+    def __init__(self, score=0):
+        global high_score
+
         self.game_over_rect = game_over_surface.get_rect(center=(288, 512))
+        self.score_surface = None
+        self.score_rect = None
+        self.high_score_surface = None
+        self.high_score_rect = None
+
+        self.score = score
+        if self.score > high_score:
+            high_score = self.score
 
     def render(self):
         screen.blit(bg_surface, (0, 0))
         screen.blit(game_over_surface, self.game_over_rect)
+
+        self.score_surface = game_font.render(
+            f"Score: {self.score}", True, (255, 255, 255)
+        )
+        self.score_rect = self.score_surface.get_rect(center=(288, 100))
+        screen.blit(self.score_surface, self.score_rect)
+
+        self.high_score_surface = game_font.render(
+            f"High Score: {high_score}", True, (255, 255, 255)
+        )
+        self.high_score_rect = self.high_score_surface.get_rect(center=(288, 850))
+        screen.blit(self.high_score_surface, self.high_score_rect)
 
     def update(self):
         pass
